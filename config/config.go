@@ -11,7 +11,9 @@ type Configuration struct {
 
 // Modem holds modem configuration
 type Modem struct {
-	Url string
+	Url      string
+	Username string
+	Password string
 }
 
 // Polling holds polling configuration
