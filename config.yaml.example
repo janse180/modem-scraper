@@ -2,6 +2,10 @@
 modem:
   # URL pointing to the modem
   url: http://192.168.100.1
+  # Username for modem login (assumes the latest Comcast-pushed firmware)
+  username: myuser
+  # Password for modem login
+  password: mypass
 
 # Polling configuration
 polling:
