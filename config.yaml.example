@@ -4,7 +4,8 @@ modem:
   url: http://192.168.100.1
   # Username for modem login (assumes the latest Comcast-pushed firmware)
   username: myuser
-  # Password for modem login
+  # Password for modem login; defaults to last 8 characters of the serial
+  # number found on the modem
   password: mypass
 
 # Polling configuration
