@@ -17,27 +17,29 @@ import (
 )
 
 // Scrape scrapes data from the modem.
+// Logout after each call to let the modem reclaim resources, per
+// https://github.com/mdonoughe/modem_status
 func Scrape(logger *zap.Logger, conf config.Configuration) (*ModemInformation, error) {
 	doc, err := getDocumentFromURL(logger, conf.Modem.Url+"/cmconnectionstatus.html", conf)
 	if err != nil {
 		return nil, err
 	}
+	getDocumentFromURL(logger, conf.Modem.Url+"/logout.html", conf)
 	connectionStatus := scrapeConnectionStatus(doc)
 
 	doc, err = getDocumentFromURL(logger, conf.Modem.Url+"/cmswinfo.html", conf)
 	if err != nil {
 		return nil, err
 	}
+	getDocumentFromURL(logger, conf.Modem.Url+"/logout.html", conf)
 	softwareInformation := scrapeSoftwareInformation(doc)
 
 	doc, err = getDocumentFromURL(logger, conf.Modem.Url+"/cmeventlog.html", conf)
 	if err != nil {
 		return nil, err
 	}
-	eventLog := scrapeEventLogs(logger, doc)
-
-	// Logout to let the modem reclaim resources, per https://github.com/mdonoughe/modem_status
 	getDocumentFromURL(logger, conf.Modem.Url+"/logout.html", conf)
+	eventLog := scrapeEventLogs(logger, doc)
 
 	modemInformation := ModemInformation{
 		ConnectionStatus:    *connectionStatus,
