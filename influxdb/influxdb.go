@@ -22,9 +22,10 @@ func Publish(logger *zap.Logger, config config.InfluxDB, modemInformation scrape
 	)
 
 	influx, err := client.NewHTTPClient(client.HTTPConfig{
-		Addr:     config.Url,
-		Username: config.Username,
-		Password: config.Password,
+		Addr:               config.Url,
+		Username:           config.Username,
+		Password:           config.Password,
+		InsecureSkipVerify: config.SkipVerifySsl,
 	})
 	if err != nil {
 		return fmt.Errorf("error creating InfluxDB client: %s", err.Error())

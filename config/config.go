@@ -34,11 +34,12 @@ type MQTT struct {
 
 // InfluxDB holds InfluxDB connection configuration.
 type InfluxDB struct {
-	Enabled  bool
-	Url      string
-	Database string
-	Username string
-	Password string
+	Enabled       bool
+	Url           string
+	Database      string
+	Username      string
+	Password      string
+	SkipVerifySsl bool
 }
 
 // BoltDB holds BoltDB configuration.

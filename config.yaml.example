@@ -24,6 +24,8 @@ influxdb:
   # Credentials for authentication (omit if unauthenticated)
   username: user
   password: pass
+  # Toggle whether to skip SSL verification
+  skipVerifySsl: False
 
 # MQTT configuration
 mqtt:
