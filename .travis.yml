@@ -6,6 +6,10 @@ go:
 env:
   - GO111MODULE=on
 
+arch: 
+  - amd64
+  - arm64
+
 install: true
 
 jobs:
@@ -22,9 +26,19 @@ jobs:
           - ${HOME}/gopath/pkg/mod
     - stage: build
       go: 1.12.x
+      arch: amd64
       script:
         - ./scripts/build.sh
       cache:
         directories:
           - ${HOME}/.cache/go-build
           - ${HOME}/gopath/pkg/mod
+    - stage: buildarm
+      go: 1.12.x
+      arch: arm64
+      script:
+        - ./scripts/buildarm.sh
+      cache:
+        directories:
+          - ${HOME}/.cache/go-build
+          - ${HOME}/gopath/pkg/mod      
