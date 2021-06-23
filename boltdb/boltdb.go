@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/pdunnavant/modem-scraper/config"
-	"github.com/pdunnavant/modem-scraper/scrape"
+	"github.com/janse180/modem-scraper/config"
+	"github.com/janse180/modem-scraper/scrape"
 
 	"github.com/OneOfOne/xxhash"
 	"github.com/boltdb/bolt"

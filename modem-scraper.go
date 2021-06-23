@@ -3,14 +3,17 @@ package main
 import (
 	"flag"
 	"fmt"
+	"net/http"
 	"os"
 	"os/signal"
 
-	"github.com/pdunnavant/modem-scraper/boltdb"
-	"github.com/pdunnavant/modem-scraper/config"
-	"github.com/pdunnavant/modem-scraper/influxdb"
-	"github.com/pdunnavant/modem-scraper/mqtt"
-	"github.com/pdunnavant/modem-scraper/scrape"
+	"github.com/janse180/modem-scraper/boltdb"
+	"github.com/janse180/modem-scraper/config"
+	"github.com/janse180/modem-scraper/influxdb"
+	"github.com/janse180/modem-scraper/mqtt"
+	"github.com/janse180/modem-scraper/prom"
+	"github.com/janse180/modem-scraper/scrape"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/robfig/cron"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
@@ -28,7 +31,7 @@ type CliInputs struct {
 
 func main() {
 
-	logger, err := zap.NewProduction()
+	logger, err := zap.NewDevelopment()
 	if err != nil {
 		fmt.Println("{\"op\": \"main\", \"level\": \"fatal\", \"msg\": \"failed to initiate logger\"}")
 		panic(err)
@@ -57,6 +60,13 @@ func main() {
 		panic(err)
 	}
 
+	if configuration.Prometheus.Enabled {
+		go func() {
+			http.Handle("/metrics", promhttp.Handler())
+			http.ListenAndServe(":2112", nil)
+		}()
+	}
+
 	c := cron.New()
 	c.AddFunc(configuration.Polling.Schedule, func() {
 		logger.Debug("waking up",
@@ -71,13 +81,15 @@ func main() {
 			return
 		}
 
-		modemInformation, err = boltdb.PruneEventLogs(configuration.BoltDB, *modemInformation)
-		if err != nil {
-			logger.Error("failed to prune event logs from BoltDB",
-				zap.String("op", "main"),
-				zap.Error(err),
-			)
-			return
+		if configuration.Prometheus.Enabled {
+			err = prom.Publish(logger, *modemInformation)
+			if err != nil {
+				logger.Error("failed to write data to Prometheus",
+					zap.String("op", "main"),
+					zap.Error(err),
+				)
+				return
+			}
 		}
 
 		if configuration.InfluxDB.Enabled {
@@ -101,14 +113,24 @@ func main() {
 				return
 			}
 		}
+		if configuration.BoltDB.Enabled {
+			modemInformation, err = boltdb.PruneEventLogs(configuration.BoltDB, *modemInformation)
+			if err != nil {
+				logger.Error("failed to prune event logs from BoltDB",
+					zap.String("op", "main"),
+					zap.Error(err),
+				)
+				return
+			}
 
-		err = boltdb.UpdateEventLogs(logger, configuration.BoltDB, *modemInformation)
-		if err != nil {
-			logger.Error("failed to update event logs in BoltDB",
-				zap.String("op", "main"),
-				zap.Error(err),
-			)
-			return
+			err = boltdb.UpdateEventLogs(logger, configuration.BoltDB, *modemInformation)
+			if err != nil {
+				logger.Error("failed to update event logs in BoltDB",
+					zap.String("op", "main"),
+					zap.Error(err),
+				)
+				return
+			}
 		}
 
 		logger.Debug("going back to sleep",

@@ -9,6 +9,7 @@ import (
 	"github.com/PuerkitoBio/goquery"
 	_ "github.com/influxdata/influxdb1-client" // this is important because of a bug in go mod
 	client "github.com/influxdata/influxdb1-client/v2"
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 // UpstreamBondedChannel holds all info from the
@@ -22,6 +23,34 @@ type UpstreamBondedChannel struct {
 	FrequencyHz   int
 	WidthHz       int
 	PowerdBmV     float64
+}
+
+var (
+	UpstreamBondedChannelPowerGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "upstream_bonded_channel_powerdbmv",
+		Help: "The upstream bonded channel power",
+	}, []string{
+		"Channel",
+		"ChannelID",
+		"LockStatus",
+		"USChannelType",
+		"FrequencyHz",
+		"WidthHz",
+	})
+)
+
+func (u UpstreamBondedChannel) UpdateGauge() error {
+
+	UpstreamBondedChannelPowerGauge.WithLabelValues(
+		strconv.Itoa(u.Channel),
+		strconv.Itoa(u.ChannelID),
+		u.LockStatus,
+		u.USChannelType,
+		strconv.Itoa(u.FrequencyHz),
+		strconv.Itoa(u.WidthHz)).Set(u.PowerdBmV)
+
+	return nil
+
 }
 
 // ToInfluxPoints converts UpstreamBondedChannel to "points"

@@ -6,8 +6,8 @@ import (
 
 	_ "github.com/influxdata/influxdb1-client" // this is important because of a bug in go mod
 	client "github.com/influxdata/influxdb1-client/v2"
-	"github.com/pdunnavant/modem-scraper/config"
-	"github.com/pdunnavant/modem-scraper/scrape"
+	"github.com/janse180/modem-scraper/config"
+	"github.com/janse180/modem-scraper/scrape"
 	"go.uber.org/zap"
 )
 

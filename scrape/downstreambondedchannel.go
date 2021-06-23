@@ -8,6 +8,7 @@ import (
 	"github.com/PuerkitoBio/goquery"
 	_ "github.com/influxdata/influxdb1-client" // this is important because of a bug in go mod
 	client "github.com/influxdata/influxdb1-client/v2"
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 // DownstreamBondedChannel holds all info from the
@@ -22,6 +23,75 @@ type DownstreamBondedChannel struct {
 	SNRdB          float64
 	Corrected      int
 	Uncorrectables int
+}
+
+var (
+	DownstreamBondedChannelPowerGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "downstream_bonded_channel_powerdbmv",
+		Help: "The downstream bonded channel power",
+	}, []string{
+		"ChannelID",
+		"LockStatus",
+		"Modulation",
+		"FrequencyHz",
+	})
+	DownstreamBondedChannelSNRGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "downstream_bonded_channel_snrdb",
+		Help: "The downstream bonded channel snr",
+	}, []string{
+		"ChannelID",
+		"LockStatus",
+		"Modulation",
+		"FrequencyHz",
+	})
+	DownstreamBondedChannelCorrectedGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "downstream_bonded_channel_error_corrected",
+		Help: "The downstream bonded channel corrected errors",
+	}, []string{
+		"ChannelID",
+		"LockStatus",
+		"Modulation",
+		"FrequencyHz",
+	})
+	DownstreamBondedChannelUncorrectedGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "downstream_bonded_channel_error_uncorrected",
+		Help: "The downstream bonded channel uncorrected errors",
+	}, []string{
+		"ChannelID",
+		"LockStatus",
+		"Modulation",
+		"FrequencyHz",
+	})
+)
+
+func (d DownstreamBondedChannel) UpdateGauge() error {
+
+	DownstreamBondedChannelPowerGauge.WithLabelValues(
+		strconv.Itoa(d.ChannelID),
+		d.LockStatus,
+		d.Modulation,
+		strconv.Itoa(d.FrequencyHz)).Set(d.PowerdBmV)
+
+	DownstreamBondedChannelSNRGauge.WithLabelValues(
+		strconv.Itoa(d.ChannelID),
+		d.LockStatus,
+		d.Modulation,
+		strconv.Itoa(d.FrequencyHz)).Set(d.SNRdB)
+
+	DownstreamBondedChannelCorrectedGauge.WithLabelValues(
+		strconv.Itoa(d.ChannelID),
+		d.LockStatus,
+		d.Modulation,
+		strconv.Itoa(d.FrequencyHz)).Set(float64(d.Corrected))
+
+	DownstreamBondedChannelUncorrectedGauge.WithLabelValues(
+		strconv.Itoa(d.ChannelID),
+		d.LockStatus,
+		d.Modulation,
+		strconv.Itoa(d.FrequencyHz)).Set(float64(d.Uncorrectables))
+
+	return nil
+
 }
 
 // ToInfluxPoints converts DownstreamBondedChannel to "points"

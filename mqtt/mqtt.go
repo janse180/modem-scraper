@@ -5,8 +5,8 @@ import (
 	"time"
 
 	MQTT "github.com/eclipse/paho.mqtt.golang"
-	"github.com/pdunnavant/modem-scraper/config"
-	"github.com/pdunnavant/modem-scraper/scrape"
+	"github.com/janse180/modem-scraper/config"
+	"github.com/janse180/modem-scraper/scrape"
 	"go.uber.org/zap"
 )
 

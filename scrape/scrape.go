@@ -12,32 +12,38 @@ import (
 
 	"github.com/PuerkitoBio/goquery"
 
-	"github.com/pdunnavant/modem-scraper/config"
+	"github.com/janse180/modem-scraper/config"
 	"go.uber.org/zap"
 )
 
 // Scrape scrapes data from the modem.
 func Scrape(logger *zap.Logger, conf config.Configuration) (*ModemInformation, error) {
-	doc, err := getDocumentFromURL(logger, conf.Modem.Url+"/cmconnectionstatus.html", conf)
+
+	token, err := getToken(logger, conf)
+	if err != nil {
+		return nil, err
+	}
+
+	doc, err := getDocumentFromURL(logger, conf.Modem.Url+"/cmconnectionstatus.html", conf, token)
 	if err != nil {
 		return nil, err
 	}
 	connectionStatus := scrapeConnectionStatus(doc)
 
-	doc, err = getDocumentFromURL(logger, conf.Modem.Url+"/cmswinfo.html", conf)
+	doc, err = getDocumentFromURL(logger, conf.Modem.Url+"/cmswinfo.html", conf, token)
 	if err != nil {
 		return nil, err
 	}
-	softwareInformation := scrapeSoftwareInformation(doc)
+	softwareInformation := scrapeSoftwareInformation(logger, doc)
 
-	doc, err = getDocumentFromURL(logger, conf.Modem.Url+"/cmeventlog.html", conf)
+	doc, err = getDocumentFromURL(logger, conf.Modem.Url+"/cmeventlog.html", conf, token)
 	if err != nil {
 		return nil, err
 	}
 	eventLog := scrapeEventLogs(logger, doc)
 
 	// Logout to let the modem reclaim resources, per https://github.com/mdonoughe/modem_status
-	getDocumentFromURL(logger, conf.Modem.Url+"/logout.html", conf)
+	getDocumentFromURL(logger, conf.Modem.Url+"/logout.html", conf, token)
 
 	modemInformation := ModemInformation{
 		ConnectionStatus:    *connectionStatus,
@@ -48,17 +54,12 @@ func Scrape(logger *zap.Logger, conf config.Configuration) (*ModemInformation, e
 	return &modemInformation, nil
 }
 
-func getDocumentFromURL(logger *zap.Logger, address string, conf config.Configuration) (*goquery.Document, error) {
+func getDocumentFromURL(logger *zap.Logger, address string, conf config.Configuration, token string) (*goquery.Document, error) {
 	logger.Debug(fmt.Sprintf("grabbing %s", address),
 		zap.String("op", "scrape.getDocumentFromURL"),
 	)
 
 	start := time.Now()
-
-	token, err := getToken(logger, conf)
-	if err != nil {
-		return nil, err
-	}
 
 	jar, _ := cookiejar.New(nil)
 	var cookies []*http.Cookie
@@ -105,11 +106,18 @@ func getDocumentFromURL(logger *zap.Logger, address string, conf config.Configur
 		zap.String("op", "scrape.getDocumentFromURL"),
 	)
 
+	// logger.Debug(fmt.Sprintf("%s", doc.Text()),
+	// 	zap.String("op", "scrape.getDocumentFromURL"),
+	// )
+
 	return doc, nil
 }
 
 func getToken(logger *zap.Logger, conf config.Configuration) (string, error) {
 
+	logger.Info(fmt.Sprintf("Attempting to renew token"),
+		zap.String("op", "scrape.getToken"),
+	)
 	// The modem has an ancient cert loaded and there is no option to replace it
 	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 	client := &http.Client{}
@@ -142,6 +150,10 @@ func getToken(logger *zap.Logger, conf config.Configuration) (string, error) {
 	if len(token) != 31 {
 		return "", fmt.Errorf("did not retrieve auth token successfully")
 	}
+
+	logger.Info(fmt.Sprintf("Got new token: %s", token),
+		zap.String("op", "scrape.getToken"),
+	)
 
 	return token, nil
 }

@@ -4,6 +4,7 @@ import (
 	"github.com/PuerkitoBio/goquery"
 	_ "github.com/influxdata/influxdb1-client" // this is important because of a bug in go mod
 	client "github.com/influxdata/influxdb1-client/v2"
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 // ConnectionStatus holds all info from /cmconnectionstatus.html.
@@ -11,6 +12,25 @@ type ConnectionStatus struct {
 	StartupProcedure         StartupProcedure
 	DownstreamBondedChannels []DownstreamBondedChannel
 	UpstreamBondedChannels   []UpstreamBondedChannel
+}
+
+func init() {
+	prometheus.MustRegister(UpstreamBondedChannelPowerGauge)
+	prometheus.MustRegister(DownstreamBondedChannelPowerGauge)
+	prometheus.MustRegister(DownstreamBondedChannelSNRGauge)
+	prometheus.MustRegister(DownstreamBondedChannelCorrectedGauge)
+	prometheus.MustRegister(DownstreamBondedChannelUncorrectedGauge)
+}
+
+func (c ConnectionStatus) UpdateGauge() {
+
+	for _, channel := range c.DownstreamBondedChannels {
+		channel.UpdateGauge()
+	}
+	for _, channel := range c.UpstreamBondedChannels {
+		channel.UpdateGauge()
+	}
+
 }
 
 // ToInfluxPoints converts ConnectionStatus to "points"

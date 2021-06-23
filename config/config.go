@@ -2,11 +2,12 @@ package config
 
 // Configuration holds all configuration for modem-scraper.
 type Configuration struct {
-	Modem    Modem
-	Polling  Polling
-	MQTT     MQTT
-	InfluxDB InfluxDB
-	BoltDB   BoltDB
+	Modem      Modem
+	Polling    Polling
+	MQTT       MQTT
+	InfluxDB   InfluxDB
+	BoltDB     BoltDB
+	Prometheus Prometheus
 }
 
 // Modem holds modem configuration
@@ -44,5 +45,10 @@ type InfluxDB struct {
 
 // BoltDB holds BoltDB configuration.
 type BoltDB struct {
-	Path string
+	Enabled bool
+	Path    string
+}
+
+type Prometheus struct {
+	Enabled bool
 }

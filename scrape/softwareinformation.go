@@ -9,6 +9,7 @@ import (
 	"github.com/PuerkitoBio/goquery"
 	_ "github.com/influxdata/influxdb1-client" // this is important because of a bug in go mod
 	client "github.com/influxdata/influxdb1-client/v2"
+	"go.uber.org/zap"
 )
 
 // SoftwareInformation holds data pulled from the /cmswinfo.html page.
@@ -54,9 +55,9 @@ const macAddressSelector = "#bg3 > div.container > div.content > table:nth-child
 const serialNumberSelector = "#bg3 > div.container > div.content > table:nth-child(2) > tbody > tr:nth-child(6) > td:nth-child(2)"
 const uptimeSelector = "#bg3 > div.container > div.content > table:nth-child(5) > tbody > tr:nth-child(2) > td:nth-child(2)"
 
-func scrapeSoftwareInformation(doc *goquery.Document) *SoftwareInformation {
+func scrapeSoftwareInformation(logger *zap.Logger, doc *goquery.Document) *SoftwareInformation {
 	uptimeString := doc.Find(uptimeSelector).Text()
-	uptimeMins := uptimeToMinutes(uptimeString)
+	uptimeMins := uptimeToMinutes(logger, uptimeString)
 	softwareInformation := SoftwareInformation{
 		StandardSpecificationCompliant: doc.Find(standardSpecificationCompliantSelector).Text(),
 		HardwareVersion:                doc.Find(hardwareVersionSelector).Text(),
@@ -71,7 +72,9 @@ func scrapeSoftwareInformation(doc *goquery.Document) *SoftwareInformation {
 }
 
 // "0 days 02h:44m:31s.00"
-func uptimeToMinutes(uptime string) int {
+func uptimeToMinutes(logger *zap.Logger, uptime string) int {
+	logger.Info(uptime)
+	fmt.Printf("%s", uptime)
 	daysString := strings.Split(uptime, " ")[0]
 	timeString := strings.Split(uptime, " ")[2]
 	timeString = strings.ReplaceAll(timeString, "h", "")
