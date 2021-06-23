@@ -34,7 +34,7 @@ func Scrape(logger *zap.Logger, conf config.Configuration) (*ModemInformation, e
 	if err != nil {
 		return nil, err
 	}
-	softwareInformation := scrapeSoftwareInformation(logger, doc)
+	softwareInformation := scrapeSoftwareInformation(doc)
 
 	doc, err = getDocumentFromURL(logger, conf.Modem.Url+"/cmeventlog.html", conf, token)
 	if err != nil {
