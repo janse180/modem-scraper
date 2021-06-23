@@ -6,7 +6,7 @@ echo "Building arm binary with version [${BUILD_VERSION}]..."
 
 BINARY_NAME="modem-scraper"
 FLAGS="-X main.BuildVersion=${BUILD_VERSION}"
-GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -ldflags="${FLAGS}" -o ${BINARY_NAME}
+GOOS=linux GOARCH=arm GOARM=7 go build -ldflags="${FLAGS}" -o ${BINARY_NAME}
 
 ARCHIVE_NAME="${BINARY_NAME}_${BUILD_VERSION}_linux_arm64.zip"
 zip ${ARCHIVE_NAME} ${BINARY_NAME}

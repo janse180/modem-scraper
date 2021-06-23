@@ -14,16 +14,16 @@ install: true
 
 jobs:
   include:
-    - stage: test
-      go: 1.12.x
-      script:
-        - ./scripts/test.sh
-      after_success:
-        - bash <(curl -s https://codecov.io/bash)
-      cache:
-        directories:
-          - ${HOME}/.cache/go-build
-          - ${HOME}/gopath/pkg/mod
+    # - stage: test
+    #   go: 1.12.x
+    #   script:
+    #     - ./scripts/test.sh
+    #   after_success:
+    #     - bash <(curl -s https://codecov.io/bash)
+    #   cache:
+    #     directories:
+    #       - ${HOME}/.cache/go-build
+    #       - ${HOME}/gopath/pkg/mod
     - stage: build
       go: 1.12.x
       arch: amd64
